@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkinCheck AI — そのスキンケア、本当にあなたに合ってる？</title>
+  <meta name="description" content="敏感肌の男性向け、AIによるスキンケア商品レビュー解析ツール。商品URLを貼るだけで買い・注意・見送りを判定します。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0B0B0C;
+      --card: #151517;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.13);
+      --text: #F5F5F7;
+      --muted: rgba(245,245,247,0.45);
+      --blue: #7DD3FC;
+      --green: #22C55E;
+      --amber: #F59E0B;
+      --red: #EF4444;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Sora', 'Noto Sans JP', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .wrap { max-width: 480px; margin: 0 auto; padding: 0 20px 80px; }
+
+    /* Header */
+    .header { padding: 56px 0 40px; opacity: 0; animation: fadeUp 0.7s ease forwards; }
+    .logo { font-size: 13px; font-weight: 500; letter-spacing: 0.12em; color: var(--blue); text-transform: uppercase; margin-bottom: 14px; }
+    .headline { font-size: 26px; font-weight: 600; line-height: 1.35; letter-spacing: -0.02em; margin-bottom: 12px; color: #FFFFFF; }
+    .subline { font-size: 14px; color: rgba(245,245,247,0.65); font-weight: 400; }
+
+    /* Input */
+    .input-area { opacity: 0; animation: fadeUp 0.7s ease 0.1s forwards; margin-bottom: 32px; }
+    .input-wrap {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 5px 5px 5px 18px;
+      display: flex; align-items: center; gap: 10px; transition: border-color 0.2s;
+    }
+    .input-wrap:focus-within { border-color: rgba(125,211,252,0.4); }
+    .url-input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-family: inherit; font-size: 14px; font-weight: 300; }
+    .url-input::placeholder { color: var(--muted); }
+    .btn-analyze {
+      background-color: #7DD3FC !important;
+      color: #000000 !important;
+      -webkit-text-fill-color: #000000 !important;
+      border: none; border-radius: 12px; padding: 11px 22px;
+      font-family: 'Sora', 'Noto Sans JP', sans-serif;
+      font-size: 14px; font-weight: 700; letter-spacing: 0.03em;
+      cursor: pointer; white-space: nowrap;
+      box-shadow: 0 0 0 1px rgba(125,211,252,0.5), 0 2px 12px rgba(125,211,252,0.25);
+      transition: transform 0.15s;
+    }
+    .btn-analyze:hover { transform: scale(1.03); }
+    .btn-analyze:active { transform: scale(0.97); }
+
+    /* Demo */
+    .demo-section { opacity: 0; animation: fadeUp 0.7s ease 0.2s forwards; margin-bottom: 40px; }
+    .demo-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(245,245,247,0.4); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .demo-label::before, .demo-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .demo-phone { background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 20px 16px; }
+    .step-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 18px; }
+    .step-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.12); transition: background 0.3s, transform 0.3s; }
+    .step-dot.active { background: var(--blue); transform: scale(1.3); }
+    .demo-slides { position: relative; min-height: 190px; }
+    .demo-slide { position: absolute; inset: 0; opacity: 0; transform: translateX(18px); transition: opacity 0.45s ease, transform 0.45s ease; pointer-events: none; display: flex; flex-direction: column; gap: 12px; }
+    .demo-slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+    .demo-slide.exit { opacity: 0; transform: translateX(-18px); }
+    .slide-step-tag { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue); background: rgba(125,211,252,0.1); border: 1px solid rgba(125,211,252,0.2); border-radius: 100px; padding: 3px 10px; display: inline-block; width: fit-content; }
+    .slide-title { font-size: 15px; font-weight: 600; color: #fff; }
+    .slide-desc { font-size: 13px; color: rgba(245,245,247,0.6); font-weight: 300; line-height: 1.6; }
+    .mock-input-row { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 10px; margin-top: 4px; }
+    .mock-url-text { font-size: 11px; color: rgba(245,245,247,0.5); flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .mock-url-text span { color: var(--blue); border-right: 1px solid var(--blue); animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { border-color: transparent; } }
+    .mock-btn-small { background: var(--blue); color: #000; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 7px; white-space: nowrap; }
+    .mock-loader { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0 4px; }
+    .mock-spinner { width: 28px; height: 28px; border: 2px solid rgba(125,211,252,0.15); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.9s linear infinite; }
+    .mock-steps { width: 100%; display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+    .mock-step-row { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+    .mock-step-icon { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
+    .mock-step-icon.done { background: rgba(34,197,94,0.15); color: var(--green); }
+    .mock-step-icon.doing { background: rgba(125,211,252,0.12); color: var(--blue); animation: pulse 1s ease infinite; }
+    .mock-step-icon.wait { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.2); }
+    .mock-step-label.done { color: rgba(245,245,247,0.55); text-decoration: line-through; }
+    .mock-step-label.doing { color: #fff; }
+    .mock-step-label.wait { color: rgba(245,245,247,0.25); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .mock-result { display: flex; flex-direction: column; gap: 8px; }
+    .mock-verdict-row { display: flex; align-items: center; justify-content: space-between; }
+    .mock-verdict-badge { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: var(--green); }
+    .mock-verdict-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+    .mock-score-pill { font-size: 11px; font-weight: 600; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); color: var(--green); padding: 3px 10px; border-radius: 100px; }
+    .mock-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+    .mock-tag { font-size: 10px; padding: 3px 9px; border-radius: 100px; border: 1px solid rgba(125,211,252,0.2); color: var(--blue); background: rgba(125,211,252,0.07); }
+    .mock-summary-bar { height: 1px; background: var(--border); margin: 4px 0; }
+    .mock-summary-text { font-size: 11px; color: rgba(245,245,247,0.55); font-weight: 300; line-height: 1.5; }
+    .mock-alt-row { display: flex; gap: 6px; margin-top: 2px; }
+    .mock-alt-card { flex: 1; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 7px 8px; }
+    .mock-alt-name { font-size: 10px; font-weight: 500; color: rgba(245,245,247,0.8); line-height: 1.4; }
+    .mock-alt-sub { font-size: 9px; color: rgba(245,245,247,0.35); margin-top: 2px; }
+    .demo-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; }
+    .demo-nav-btn { background: none; border: 1px solid var(--border); border-radius: 8px; color: rgba(245,245,247,0.5); font-family: inherit; font-size: 12px; padding: 6px 14px; cursor: pointer; transition: border-color 0.2s, color 0.2s; }
+    .demo-nav-btn:hover { border-color: var(--border-hover); color: #fff; }
+    .demo-nav-btn:disabled { opacity: 0.2; cursor: default; }
+    .demo-progress-text { font-size: 11px; color: rgba(245,245,247,0.3); }
+
+    /* Loading */
+    .loading { display: none; flex-direction: column; align-items: center; padding: 60px 0; gap: 20px; }
+    .loading.show { display: flex; animation: fadeUp 0.4s ease forwards; }
+    .spinner { width: 40px; height: 40px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.9s linear infinite; }
+    .loading-text { font-size: 13px; color: rgba(245,245,247,0.6); font-weight: 300; letter-spacing: 0.04em; }
+
+    /* Result */
+    .result { display: none; flex-direction: column; gap: 16px; }
+    .result.show { display: flex; }
+    .verdict-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 24px; opacity: 0; animation: fadeUp 0.5s ease forwards; }
+    .verdict-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+    .verdict-label { display: flex; align-items: flex-start; gap: 10px; }
+    .verdict-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .verdict-text { font-size: 22px; font-weight: 600; color: #fff; }
+    .score-sublabel { font-size: 12px; color: rgba(245,245,247,0.55); font-weight: 300; margin-top: 2px; }
+    .score-ring { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
+    .score-ring svg { transform: rotate(-90deg); }
+    .score-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; color: #fff; }
+    .summary-text { font-size: 14px; color: rgba(245,245,247,0.72); font-weight: 300; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; line-height: 1.7; }
+    .section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(245,245,247,0.5); margin-bottom: 10px; }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .tag { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 100px; padding: 5px 13px; font-size: 12px; color: rgba(245,245,247,0.85); font-weight: 300; }
+    .tag.good { color: #4ade80; border-color: rgba(34,197,94,0.25); background: rgba(34,197,94,0.08); }
+    .tag.bad  { color: #f87171; border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.08); }
+    .reason-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .reason-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: rgba(245,245,247,0.78); font-weight: 300; }
+    .reason-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--blue); margin-top: 7px; flex-shrink: 0; }
+    .alt-section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(245,245,247,0.5); margin-bottom: 12px; opacity: 0; animation: fadeUp 0.5s ease 0.1s forwards; }
+    .alt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; opacity: 0; animation: fadeUp 0.5s ease 0.15s forwards; }
+    .alt-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 18px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; transition: border-color 0.2s, transform 0.2s; }
+    .alt-card:hover { border-color: var(--border-hover); transform: translateY(-3px); }
+    .alt-badge { font-size: 10px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase; color: var(--blue); }
+    .alt-name { font-size: 13px; font-weight: 500; line-height: 1.4; color: #fff; }
+    .alt-reason { font-size: 12px; color: rgba(245,245,247,0.6); font-weight: 300; flex: 1; }
+    .alt-price { font-size: 13px; font-weight: 600; color: var(--amber); }
+    .alt-cta { margin-top: 6px; background: rgba(125,211,252,0.1); border: 1px solid rgba(125,211,252,0.25); border-radius: 8px; padding: 7px 10px; font-size: 11px; font-weight: 600; color: var(--blue); text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.2s; }
+    .alt-card:hover .alt-cta { background: rgba(125,211,252,0.18); }
+    .alt-pr { font-size: 9px; color: rgba(245,245,247,0.25); text-align: right; margin-top: 2px; }
+    .featured-card { background: linear-gradient(135deg, rgba(125,211,252,0.06) 0%, rgba(34,197,94,0.04) 100%); border: 1px solid rgba(125,211,252,0.2); border-radius: var(--radius); padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; text-decoration: none; transition: border-color 0.2s, transform 0.2s; opacity: 0; animation: fadeUp 0.5s ease 0.25s forwards; }
+    .featured-card:hover { border-color: rgba(125,211,252,0.4); transform: translateY(-2px); }
+    .featured-top { display: flex; align-items: center; justify-content: space-between; }
+    .featured-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber); background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.25); border-radius: 100px; padding: 2px 9px; }
+    .featured-name { font-size: 15px; font-weight: 600; color: #fff; }
+    .featured-desc { font-size: 13px; color: rgba(245,245,247,0.65); font-weight: 300; line-height: 1.6; }
+    .featured-cta { background: var(--blue); color: #000; font-size: 13px; font-weight: 700; border-radius: 10px; padding: 10px 16px; text-align: center; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .featured-card:hover .featured-cta { opacity: 0.9; }
+    .featured-pr { font-size: 9px; color: rgba(245,245,247,0.2); text-align: right; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="header">
+    <p class="logo">SkinCheck AI</p>
+    <h1 class="headline">そのスキンケア、<br>本当にあなたに合ってる？</h1>
+    <p class="subline">敏感肌の男性向け、AIによる購入判断ツール</p>
+  </header>
+
+  <div class="input-area">
+    <div class="input-wrap">
+      <input class="url-input" type="url" id="urlInput" placeholder="Amazonや楽天の商品URLを貼り付け" />
+      <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">解析する</button>
+    </div>
+  </div>
+
+  <!-- Demo -->
+  <div class="demo-section">
+    <p class="demo-label">使い方デモ</p>
+    <div class="demo-phone">
+      <div class="step-dots" id="stepDots"></div>
+      <div class="demo-slides" id="demoSlides">
+        <div class="demo-slide active">
+          <span class="slide-step-tag">Step 1</span>
+          <p class="slide-title">商品URLをコピーして貼り付ける</p>
+          <div class="mock-input-row">
+            <span style="font-size:12px;opacity:0.4;">🔗</span>
+            <span class="mock-url-text">amazon.co.jp/dp/B08XYZ<span></span></span>
+            <span class="mock-btn-small">解析する</span>
+          </div>
+          <p class="slide-desc">AmazonでもLoftでも、URLを貼るだけ。登録不要・無料で使えます。</p>
+        </div>
+        <div class="demo-slide">
+          <span class="slide-step-tag">Step 2</span>
+          <p class="slide-title">AIがレビューを自動解析</p>
+          <div class="mock-loader"><div class="mock-spinner"></div></div>
+          <div class="mock-steps">
+            <div class="mock-step-row"><div class="mock-step-icon done">✓</div><span class="mock-step-label done">レビューを収集</span></div>
+            <div class="mock-step-row"><div class="mock-step-icon doing">…</div><span class="mock-step-label doing">敏感肌リスクを判定中</span></div>
+            <div class="mock-step-row"><div class="mock-step-icon wait">○</div><span class="mock-step-label wait">代替商品を選定</span></div>
+          </div>
+          <p class="slide-desc">数百件のレビューを数秒でスキャン。成分・刺激報告・保湿評価を総合判断します。</p>
+        </div>
+        <div class="demo-slide">
+          <span class="slide-step-tag">Step 3</span>
+          <p class="slide-title">判定結果と代替商品を確認</p>
+          <div class="mock-result">
+            <div class="mock-verdict-row">
+              <div class="mock-verdict-badge"><span class="mock-verdict-dot"></span>買い</div>
+              <span class="mock-score-pill">78% おすすめ</span>
+            </div>
+            <div class="mock-tags"><span class="mock-tag">乾燥肌向き</span><span class="mock-tag">刺激少なめ</span><span class="mock-tag">保湿◎</span></div>
+            <div class="mock-summary-bar"></div>
+            <p class="mock-summary-text">敏感肌でも比較的使いやすい処方設計。刺激レポートが少なく初心者にも適している。</p>
+            <div class="mock-alt-row">
+              <div class="mock-alt-card"><p class="mock-alt-name">無印良品 敏感肌用</p><p class="mock-alt-sub">代替候補 01</p></div>
+              <div class="mock-alt-card"><p class="mock-alt-name">ニベアメン センシティブ</p><p class="mock-alt-sub">代替候補 02</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="demo-nav">
+        <button class="demo-nav-btn" id="prevBtn" onclick="changeSlide(-1)" disabled>← 前へ</button>
+        <span class="demo-progress-text" id="progressText">1 / 3</span>
+        <button class="demo-nav-btn" id="nextBtn" onclick="changeSlide(1)">次へ →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p class="loading-text">レビューを解析しています...</p>
+  </div>
+
+  <!-- Result -->
+  <div class="result" id="result">
+    <div class="verdict-card">
+      <div class="verdict-top">
+        <div class="verdict-label">
+          <div class="verdict-dot" id="verdictDot"></div>
+          <div><p class="verdict-text" id="verdictText"></p><p class="score-sublabel">おすすめ度</p></div>
+        </div>
+        <div class="score-ring">
+          <svg width="60" height="60" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="24" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="3"/>
+            <circle cx="30" cy="30" r="24" fill="none" stroke-width="3" stroke-linecap="round"
+              id="scoreArc" stroke-dasharray="0 150.8" style="transition:stroke-dasharray 1s ease"/>
+          </svg>
+          <div class="score-num" id="scoreNum">0%</div>
+        </div>
+      </div>
+      <p class="summary-text" id="summaryText"></p>
+      <p class="section-label">理由</p>
+      <div class="reason-list" id="reasonList"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div><p class="section-label">向いている人</p><div class="tag-list" id="goodList"></div></div>
+        <div><p class="section-label">向いていない人</p><div class="tag-list" id="badList"></div></div>
+      </div>
+    </div>
+    <div>
+      <p class="alt-section-label">代替商品</p>
+      <div class="alt-grid" id="altGrid"></div>
+    </div>
+    <div id="featuredWrap"></div>
+  </div>
+
+</div>
+
+<script>
+  /* ── Demo slider ── */
+  let currentSlide = 0;
+  const totalSlides = 3;
+  function buildDots() {
+    document.getElementById('stepDots').innerHTML =
+      Array.from({length: totalSlides}, (_, i) =>
+        `<div class="step-dot ${i===0?'active':''}" id="dot${i}"></div>`
+      ).join('');
+  }
+  function changeSlide(dir) {
+    const slides = document.querySelectorAll('.demo-slide');
+    slides[currentSlide].classList.remove('active');
+    slides[currentSlide].classList.add('exit');
+    setTimeout(() => slides[currentSlide].classList.remove('exit'), 450);
+    document.getElementById('dot' + currentSlide).classList.remove('active');
+    currentSlide = Math.max(0, Math.min(totalSlides - 1, currentSlide + dir));
+    slides[currentSlide].classList.add('active');
+    document.getElementById('dot' + currentSlide).classList.add('active');
+    document.getElementById('prevBtn').disabled = currentSlide === 0;
+    document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+    document.getElementById('progressText').textContent = `${currentSlide + 1} / ${totalSlides}`;
+  }
+  buildDots();
+  let autoTimer = setInterval(() => {
+    if (currentSlide < totalSlides - 1) changeSlide(1);
+    else clearInterval(autoTimer);
+  }, 3200);
+  document.getElementById('demoSlides').addEventListener('click', () => clearInterval(autoTimer));
+
+  /* ── Mock data ── */
+  const DUMMY = {
+    score: 78, status: '買い',
+    reasons: ['刺激報告が少ない', '保湿力が高い評価が多い', 'パラベンフリーで低アレルゲン'],
+    goodFor: ['乾燥肌', '敏感肌初心者', 'シンプルケア派'],
+    badFor: ['脂性肌', 'さっぱり系が好みの人'],
+    summary: '敏感肌でも比較的使いやすい処方設計。刺激レポートが少なく、初めての化粧水としても適している。',
+    alternatives: [
+      { name: '無印良品 敏感肌用化粧水', reason: '低刺激処方で初心者に安心', price: '¥890〜',
+        affiliateUrl: 'https://www.amazon.co.jp/s?k=無印良品+敏感肌+化粧水&tag=YOUR_ASSOCIATE_TAG' },
+      { name: 'ニベアメン センシティブ モイスチャー', reason: 'ヒリつきレポートが極めて少ない', price: '¥680〜',
+        affiliateUrl: 'https://www.amazon.co.jp/s?k=ニベアメン+センシティブ&tag=YOUR_ASSOCIATE_TAG' }
+    ],
+    sponsored: {
+      name: 'BULK HOMME ザ・トナー',
+      desc: '皮膚科医監修。敏感肌専用に開発された低刺激化粧水。メンズスキンケア売上No.1*',
+      note: '* 自社調べ 2024年',
+      affiliateUrl: 'https://www.amazon.co.jp/s?k=BULK+HOMME+トナー&tag=YOUR_ASSOCIATE_TAG'
+    }
+  };
+  const COLORS = { '買い': '#22C55E', '注意': '#F59E0B', '見送り': '#EF4444' };
+
+  function setScore(score, color) {
+    const circ = 2 * Math.PI * 24;
+    const arc = document.getElementById('scoreArc');
+    arc.setAttribute('stroke', color);
+    setTimeout(() => arc.setAttribute('stroke-dasharray', `${(score/100)*circ} ${circ}`), 100);
+    let cur = 0;
+    const el = document.getElementById('scoreNum');
+    const step = score / 40;
+    const t = setInterval(() => {
+      cur = Math.min(cur + step, score);
+      el.textContent = Math.round(cur) + '%';
+      if (cur >= score) clearInterval(t);
+    }, 25);
+  }
+
+  function renderResult(data) {
+    const color = COLORS[data.status] || COLORS['注意'];
+    document.getElementById('verdictDot').style.background = color;
+    document.getElementById('verdictText').textContent = data.status;
+    document.getElementById('summaryText').textContent = data.summary;
+    document.getElementById('reasonList').innerHTML = data.reasons.map(r =>
+      `<div class="reason-item"><span class="reason-dot"></span><span>${r}</span></div>`
+    ).join('');
+    document.getElementById('goodList').innerHTML = data.goodFor.map(t => `<span class="tag good">${t}</span>`).join('');
+    document.getElementById('badList').innerHTML = data.badFor.map(t => `<span class="tag bad">${t}</span>`).join('');
+    document.getElementById('altGrid').innerHTML = data.alternatives.map((a, i) => `
+      <a class="alt-card" href="${a.affiliateUrl}" target="_blank" rel="noopener noreferrer sponsored">
+        <p class="alt-badge">代替 0${i+1}</p>
+        <p class="alt-name">${a.name}</p>
+        <p class="alt-reason">${a.reason}</p>
+        <p class="alt-price">${a.price}</p>
+        <div class="alt-cta">Amazonで見る →</div>
+        <p class="alt-pr">PR</p>
+      </a>`).join('');
+    const s = data.sponsored;
+    document.getElementById('featuredWrap').innerHTML = `
+      <a class="featured-card" href="${s.affiliateUrl}" target="_blank" rel="noopener noreferrer sponsored">
+        <div class="featured-top">
+          <p class="featured-name">${s.name}</p>
+          <span class="featured-badge">PR</span>
+        </div>
+        <p class="featured-desc">${s.desc}</p>
+        <p style="font-size:10px;color:rgba(245,245,247,0.3);">${s.note}</p>
+        <div class="featured-cta" style="color:#000000;-webkit-text-fill-color:#000000;">公式サイトで詳しく見る →</div>
+        <p class="featured-pr">※本リンクはアフィリエイト広告を含みます</p>
+      </a>`;
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('result').classList.add('show');
+    setTimeout(() => setScore(data.score, color), 300);
+  }
+
+  async function analyze() {
+    const btn = document.getElementById('analyzeBtn');
+    document.getElementById('result').classList.remove('show');
+    document.getElementById('loading').classList.add('show');
+    btn.disabled = true; btn.style.opacity = '0.5';
+    await new Promise(r => setTimeout(r, 2000));
+    btn.disabled = false; btn.style.opacity = '1';
+    renderResult(DUMMY);
+  }
+
+  document.getElementById('urlInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') analyze();
+  });
+</script>
+</body>
+</html>
