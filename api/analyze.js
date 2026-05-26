@@ -3,10 +3,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { reviewText } = req.body;
+  const { skinType, concerns, currentProduct, reviewText } = req.body;
 
-  if (!reviewText || reviewText.trim().length < 10) {
-    return res.status(400).json({ error: 'レビューテキストが短すぎます' });
+  // 肌タイプかレビューのどちらかは必須
+  if (!skinType && (!reviewText || reviewText.trim().length < 10)) {
+    return res.status(400).json({ error: '肌タイプかレビューを入力してください' });
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
@@ -14,13 +15,27 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-  const prompt = `
-あなたは敏感肌の30代男性向けスキンケア商品のレビュー解析AIです。
-以下のレビューテキストを分析して、必ずJSON形式のみで返答してください。
-余分な文章やマークダウンは一切含めないでください。
+  // プロフィール情報を文章化
+  const profileLines = [];
+  if (skinType) profileLines.push(`肌タイプ：${skinType}`);
+  if (concerns && concerns.length > 0) profileLines.push(`気になること：${concerns.join('、')}`);
+  if (currentProduct) profileLines.push(`現在使用中の商品：${currentProduct}`);
+  const profileText = profileLines.length > 0
+    ? `【ユーザーの肌プロフィール】\n${profileLines.join('\n')}`
+    : '';
 
-レビューテキスト:
-${reviewText.slice(0, 3000)}
+  const reviewSection = reviewText && reviewText.trim().length > 0
+    ? `【商品レビュー】\n${reviewText.slice(0, 3000)}`
+    : '（商品レビューなし。肌プロフィールのみで判断してください）';
+
+  const prompt = `
+あなたは敏感肌の30代男性向けスキンケア専門のAIアドバイザーです。
+以下の情報をもとに、この商品がユーザーに合うかを判定してください。
+必ずJSON形式のみで返答してください。余分な文章やマークダウンは一切含めないでください。
+
+${profileText}
+
+${reviewSection}
 
 以下のJSON形式で返してください:
 {
@@ -30,18 +45,20 @@ ${reviewText.slice(0, 3000)}
   "goodFor": ["向いている人1", "向いている人2"],
   "badFor": ["向いていない人1", "向いていない人2"],
   "summary": "30文字以内の結論",
+  "personalInsight": "ユーザーの肌プロフィールを踏まえた50文字以内のパーソナルコメント（肌タイプ情報がある場合のみ。ない場合は空文字）",
   "alternatives": [
-    { "name": "代替商品名1", "reason": "理由", "price": "価格帯" },
-    { "name": "代替商品名2", "reason": "理由", "price": "価格帯" }
+    { "name": "代替商品名1", "reason": "この人に合う理由", "price": "価格帯" },
+    { "name": "代替商品名2", "reason": "この人に合う理由", "price": "価格帯" }
   ]
 }
 
-判定基準:
+判定基準：
 - score 70以上 → status: "買い"
 - score 40〜69 → status: "注意"
 - score 39以下 → status: "見送り"
-- 敏感肌への刺激、保湿力、成分の安全性を重視して評価すること
-- 代替商品は実在する日本で購入可能な商品を提案すること
+- ユーザーの肌タイプ・悩みを最優先に考慮すること
+- 代替商品はユーザーの肌プロフィールに合った日本で購入可能な商品を提案すること
+- 現在使用中の商品がある場合は、それとの相性や重複も考慮すること
 `;
 
   try {
@@ -52,10 +69,7 @@ ${reviewText.slice(0, 3000)}
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 1024,
-          },
+          generationConfig: { temperature: 0.3, maxOutputTokens: 1024 },
         }),
       }
     );
@@ -68,8 +82,6 @@ ${reviewText.slice(0, 3000)}
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    // JSON部分だけ抽出
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       console.error('JSON parse failed. Raw:', text);
