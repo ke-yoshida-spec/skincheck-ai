@@ -5,17 +5,15 @@ export default async function handler(req, res) {
 
   const { skinType, concerns, currentProduct, reviewText } = req.body;
 
-  // 肌タイプかレビューのどちらかは必須
   if (!skinType && (!reviewText || reviewText.trim().length < 10)) {
     return res.status(400).json({ error: '肌タイプかレビューを入力してください' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-  // プロフィール情報を文章化
   const profileLines = [];
   if (skinType) profileLines.push(`肌タイプ：${skinType}`);
   if (concerns && concerns.length > 0) profileLines.push(`気になること：${concerns.join('、')}`);
@@ -28,8 +26,7 @@ export default async function handler(req, res) {
     ? `【商品レビュー】\n${reviewText.slice(0, 3000)}`
     : '（商品レビューなし。肌プロフィールのみで判断してください）';
 
-  const prompt = `
-あなたは敏感肌の30代男性向けスキンケア専門のAIアドバイザーです。
+  const prompt = `あなたは敏感肌の30代男性向けスキンケア専門のAIアドバイザーです。
 以下の情報をもとに、この商品がユーザーに合うかを判定してください。
 必ずJSON形式のみで返答してください。余分な文章やマークダウンは一切含めないでください。
 
@@ -58,30 +55,35 @@ ${reviewSection}
 - score 39以下 → status: "見送り"
 - ユーザーの肌タイプ・悩みを最優先に考慮すること
 - 代替商品はユーザーの肌プロフィールに合った日本で購入可能な商品を提案すること
-- 現在使用中の商品がある場合は、それとの相性や重複も考慮すること
-`;
+- 現在使用中の商品がある場合は、それとの相性や重複も考慮すること`;
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: 1024 },
-        }),
-      }
-    );
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'あなたはスキンケア専門のAIアドバイザーです。必ずJSON形式のみで返答してください。' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 1024,
+      }),
+    });
 
     if (!response.ok) {
       const err = await response.text();
-      console.error('Gemini API error:', err);
+      console.error('Groq API error:', err);
       return res.status(500).json({ error: 'AI解析に失敗しました' });
     }
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const text = data.choices?.[0]?.message?.content || '';
+
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       console.error('JSON parse failed. Raw:', text);
