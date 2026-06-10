@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SkinCheck AI — そのスキンケア、本当にあなたに合ってる？</title>
-  <meta name="description" content="敏感肌の男性向け、AIによるスキンケア商品レビュー解析ツール。" />
+  <title>SkinCheck AI — あなたのスキンケア、相性を診断します</title>
+  <meta name="description" content="敏感肌の男性向け、AIによるスキンケア相性診断ツール。今使っているアイテムの相性と改善提案を皮膚科学的な観点でお伝えします。" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg:#0B0B0C;--card:#151517;--card2:#1C1C1F;
+      --bg:#0B0B0C;--card:#151517;--card2:#1A1A1D;
       --border:rgba(255,255,255,0.07);--border-hover:rgba(255,255,255,0.14);
-      --text:#F5F5F7;--muted:rgba(245,245,247,0.45);
+      --text:#F5F5F7;--muted:rgba(245,245,247,0.42);
       --blue:#7DD3FC;--green:#22C55E;--amber:#F59E0B;--red:#EF4444;
       --radius:18px;--radius-sm:10px;
     }
@@ -23,205 +23,263 @@
     /* Header */
     .header{padding:52px 0 36px;opacity:0;animation:fadeUp 0.7s ease forwards;}
     .logo{font-size:12px;font-weight:500;letter-spacing:0.14em;color:var(--blue);text-transform:uppercase;margin-bottom:12px;}
-    .headline{font-size:25px;font-weight:600;line-height:1.35;letter-spacing:-0.02em;margin-bottom:10px;color:#fff;}
+    .headline{font-size:24px;font-weight:600;line-height:1.35;letter-spacing:-0.02em;margin-bottom:10px;color:#fff;}
     .subline{font-size:13px;color:rgba(245,245,247,0.6);font-weight:400;}
 
-    /* Section label */
-    .sec-label{font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,245,247,0.38);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
-    .sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
+    /* Section */
+    .sec{margin-bottom:14px;opacity:0;}
+    .sec.a1{animation:fadeUp 0.6s ease 0.05s forwards;}
+    .sec.a2{animation:fadeUp 0.6s ease 0.1s forwards;}
+    .sec.a3{animation:fadeUp 0.6s ease 0.15s forwards;}
+    .sec.a4{animation:fadeUp 0.6s ease 0.2s forwards;}
+    .sec.a5{animation:fadeUp 0.6s ease 0.25s forwards;}
 
-    /* ── Skin Profile Card ── */
-    .profile-section{opacity:0;animation:fadeUp 0.7s ease 0.08s forwards;margin-bottom:14px;}
-    .profile-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 20px 16px;transition:border-color 0.2s;}
-    .profile-card:focus-within{border-color:rgba(125,211,252,0.3);}
-    .profile-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-    .profile-title{font-size:14px;font-weight:500;color:#fff;}
-    .profile-badge{font-size:10px;font-weight:500;padding:2px 9px;border-radius:100px;background:rgba(125,211,252,0.1);border:1px solid rgba(125,211,252,0.2);color:var(--blue);}
+    .sec-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .sec-num{width:22px;height:22px;border-radius:50%;background:rgba(125,211,252,0.1);border:1px solid rgba(125,211,252,0.2);color:var(--blue);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .sec-title{font-size:13px;font-weight:500;color:#fff;}
+    .sec-badge{font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:rgba(245,245,247,0.38);margin-left:auto;}
+    .sec-badge.required{background:rgba(125,211,252,0.08);border-color:rgba(125,211,252,0.2);color:var(--blue);}
 
-    .field-group{display:flex;flex-direction:column;gap:12px;}
-    .field-label{font-size:11px;font-weight:400;color:rgba(245,245,247,0.45);margin-bottom:5px;letter-spacing:0.02em;}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 18px 16px;transition:border-color 0.2s;}
+    .card:focus-within{border-color:rgba(125,211,252,0.25);}
+    .card2{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 18px 16px;transition:border-color 0.2s;}
+    .card2:focus-within{border-color:rgba(125,211,252,0.25);}
 
-    /* Chip selector */
+    .field{margin-bottom:14px;}
+    .field:last-child{margin-bottom:0;}
+    .field-label{font-size:11px;color:rgba(245,245,247,0.42);margin-bottom:7px;letter-spacing:0.02em;}
+
+    /* Chips */
     .chips{display:flex;flex-wrap:wrap;gap:6px;}
     .chip{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:100px;padding:5px 13px;font-size:12px;color:rgba(245,245,247,0.6);cursor:pointer;transition:all 0.15s;user-select:none;font-family:inherit;}
     .chip:hover{border-color:var(--border-hover);color:var(--text);}
-    .chip.selected{background:rgba(125,211,252,0.12);border-color:rgba(125,211,252,0.35);color:var(--blue);}
-    .chip.selected.multi{background:rgba(125,211,252,0.1);border-color:rgba(125,211,252,0.3);color:var(--blue);}
+    .chip.on{background:rgba(125,211,252,0.12);border-color:rgba(125,211,252,0.35);color:var(--blue);}
+    .chip.on.amber{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:var(--amber);}
+    .chip.on.red{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25);color:#f87171;}
 
-    /* Text input inside card */
+    /* Inputs */
     .field-input{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px;color:var(--text);font-family:inherit;font-size:13px;font-weight:300;outline:none;transition:border-color 0.2s;}
     .field-input::placeholder{color:var(--muted);}
     .field-input:focus{border-color:rgba(125,211,252,0.35);}
+    .field-textarea{width:100%;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 13px;color:var(--text);font-family:inherit;font-size:13px;font-weight:300;outline:none;transition:border-color 0.2s;resize:none;min-height:90px;line-height:1.7;}
+    .field-textarea::placeholder{color:var(--muted);}
+    .field-textarea:focus{border-color:rgba(125,211,252,0.35);}
 
-    /* ── Review Card ── */
-    .review-section{opacity:0;animation:fadeUp 0.7s ease 0.14s forwards;margin-bottom:20px;}
-    .review-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:20px 20px 16px;transition:border-color 0.2s;}
-    .review-card:focus-within{border-color:rgba(125,211,252,0.25);}
-    .review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-    .review-title{font-size:14px;font-weight:500;color:#fff;}
-    .optional-badge{font-size:10px;font-weight:400;padding:2px 9px;border-radius:100px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:rgba(245,245,247,0.4);}
-    .review-hint{font-size:12px;color:rgba(245,245,247,0.4);font-weight:300;margin-bottom:10px;line-height:1.55;}
-    .review-hint span{color:rgba(125,211,252,0.7);}
-    .review-textarea{width:100%;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 15px;color:var(--text);font-family:inherit;font-size:13px;font-weight:300;resize:none;outline:none;transition:border-color 0.2s;min-height:100px;line-height:1.7;}
-    .review-textarea::placeholder{color:var(--muted);}
-    .review-textarea:focus{border-color:rgba(125,211,252,0.3);}
-    .review-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
-    .char-count{font-size:11px;color:rgba(245,245,247,0.3);}
+    /* Products grid */
+    .products-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .product-item{}
+    .product-label{font-size:10px;color:rgba(245,245,247,0.38);margin-bottom:4px;display:flex;align-items:center;gap:4px;}
+    .product-icon{font-size:11px;}
 
-    /* Analyze button */
-    .btn-wrap{opacity:0;animation:fadeUp 0.7s ease 0.2s forwards;margin-bottom:32px;}
-    .btn-analyze{width:100%;background-color:#7DD3FC!important;color:#000!important;-webkit-text-fill-color:#000!important;border:none;border-radius:var(--radius);padding:14px 22px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 0 0 1px rgba(125,211,252,0.4),0 4px 20px rgba(125,211,252,0.2);transition:transform 0.15s,box-shadow 0.2s;letter-spacing:0.02em;}
-    .btn-analyze:hover{transform:translateY(-1px);box-shadow:0 0 0 1px rgba(125,211,252,0.6),0 6px 24px rgba(125,211,252,0.3);}
-    .btn-analyze:active{transform:scale(0.98);}
-    .btn-analyze:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
-    .btn-sub{text-align:center;font-size:11px;color:rgba(245,245,247,0.3);margin-top:8px;}
+    /* CTA */
+    .cta-wrap{opacity:0;animation:fadeUp 0.6s ease 0.3s forwards;margin-bottom:32px;}
+    .btn-main{width:100%;background-color:#7DD3FC!important;color:#000!important;-webkit-text-fill-color:#000!important;border:none;border-radius:var(--radius);padding:15px 22px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 0 0 1px rgba(125,211,252,0.4),0 4px 20px rgba(125,211,252,0.18);transition:transform 0.15s,box-shadow 0.2s;letter-spacing:0.02em;}
+    .btn-main:hover{transform:translateY(-1px);box-shadow:0 0 0 1px rgba(125,211,252,0.6),0 6px 24px rgba(125,211,252,0.28);}
+    .btn-main:active{transform:scale(0.98);}
+    .btn-main:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+    .btn-sub-text{text-align:center;font-size:11px;color:rgba(245,245,247,0.28);margin-top:8px;}
 
     /* Loading */
-    .loading{display:none;flex-direction:column;align-items:center;padding:60px 0;gap:16px;}
+    .loading{display:none;flex-direction:column;align-items:center;padding:64px 0;gap:16px;}
     .loading.show{display:flex;animation:fadeUp 0.4s ease forwards;}
     .spinner{width:36px;height:36px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.9s linear infinite;}
     .loading-text{font-size:13px;color:rgba(245,245,247,0.6);font-weight:300;}
     .loading-sub{font-size:11px;color:rgba(245,245,247,0.28);}
 
     /* Error */
-    .error-box{display:none;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;}
+    .error-box{display:none;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.18);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px;}
     .error-box.show{display:block;animation:fadeUp 0.4s ease forwards;}
     .error-text{font-size:13px;color:#f87171;font-weight:300;}
 
     /* Result */
     .result{display:none;flex-direction:column;gap:14px;}
     .result.show{display:flex;}
-    .verdict-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px 22px;opacity:0;animation:fadeUp 0.5s ease forwards;}
-    .verdict-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
-    .verdict-label{display:flex;align-items:flex-start;gap:10px;}
+
+    /* Verdict */
+    .verdict-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px 22px;opacity:0;animation:fadeUp 0.5s ease forwards;}
+    .verdict-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+    .verdict-left{display:flex;align-items:flex-start;gap:10px;}
     .verdict-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px;}
     .verdict-text{font-size:22px;font-weight:600;color:#fff;}
-    .score-sublabel{font-size:12px;color:rgba(245,245,247,0.45);font-weight:300;margin-top:2px;}
-    .score-ring{position:relative;width:58px;height:58px;flex-shrink:0;}
+    .score-sub{font-size:12px;color:rgba(245,245,247,0.42);font-weight:300;margin-top:2px;}
+    .score-ring{position:relative;width:56px;height:56px;flex-shrink:0;}
     .score-ring svg{transform:rotate(-90deg);}
     .score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;}
-    .summary-text{font-size:14px;color:rgba(245,245,247,0.7);font-weight:300;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:18px;line-height:1.75;}
-    .section-label{font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,245,247,0.4);margin-bottom:9px;}
-    .tag-list{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
-    .tag{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:100px;padding:4px 12px;font-size:12px;color:rgba(245,245,247,0.8);font-weight:300;}
-    .tag.good{color:#4ade80;border-color:rgba(34,197,94,0.25);background:rgba(34,197,94,0.07);}
-    .tag.bad{color:#f87171;border-color:rgba(239,68,68,0.25);background:rgba(239,68,68,0.07);}
-    .reason-list{display:flex;flex-direction:column;gap:7px;margin-bottom:18px;}
-    .reason-item{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:rgba(245,245,247,0.75);font-weight:300;}
-    .reason-dot{width:4px;height:4px;border-radius:50%;background:var(--blue);margin-top:8px;flex-shrink:0;}
+    .summary-text{font-size:14px;color:rgba(245,245,247,0.7);font-weight:300;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px;line-height:1.75;}
+    .r-label{font-size:11px;font-weight:500;letter-spacing:0.09em;text-transform:uppercase;color:rgba(245,245,247,0.38);margin-bottom:8px;}
+    .tag-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+    .tag{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:100px;padding:4px 12px;font-size:12px;color:rgba(245,245,247,0.78);font-weight:300;}
+    .tag.g{color:#4ade80;border-color:rgba(34,197,94,0.25);background:rgba(34,197,94,0.07);}
+    .tag.b{color:#f87171;border-color:rgba(239,68,68,0.25);background:rgba(239,68,68,0.07);}
+    .reason-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+    .reason-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:rgba(245,245,247,0.72);font-weight:300;line-height:1.6;}
+    .r-dot{width:3px;height:3px;border-radius:50%;background:var(--blue);margin-top:9px;flex-shrink:0;}
 
-    /* Personal insight */
-    .insight-card{background:rgba(125,211,252,0.05);border:1px solid rgba(125,211,252,0.15);border-radius:var(--radius);padding:18px 20px;opacity:0;animation:fadeUp 0.5s ease 0.08s forwards;}
-    .insight-label{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);margin-bottom:8px;}
-    .insight-text{font-size:13px;color:rgba(245,245,247,0.75);font-weight:300;line-height:1.75;}
+    /* Compatibility */
+    .compat-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:20px 20px;opacity:0;animation:fadeUp 0.5s ease 0.07s forwards;}
+    .compat-title{font-size:13px;font-weight:500;color:#fff;margin-bottom:12px;}
+    .compat-list{display:flex;flex-direction:column;gap:8px;}
+    .compat-item{display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;}
+    .compat-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+    .compat-content{}
+    .compat-name{font-size:12px;font-weight:500;color:rgba(245,245,247,0.85);margin-bottom:2px;}
+    .compat-desc{font-size:11px;color:rgba(245,245,247,0.5);font-weight:300;line-height:1.55;}
 
-    .alt-section-label{font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,245,247,0.4);margin-bottom:10px;opacity:0;animation:fadeUp 0.5s ease 0.1s forwards;}
+    /* Insight */
+    .insight-card{background:rgba(125,211,252,0.04);border:1px solid rgba(125,211,252,0.14);border-radius:var(--radius);padding:18px 20px;opacity:0;animation:fadeUp 0.5s ease 0.1s forwards;}
+    .insight-badge{font-size:10px;font-weight:500;letter-spacing:0.09em;text-transform:uppercase;color:var(--blue);margin-bottom:8px;}
+    .insight-text{font-size:13px;color:rgba(245,245,247,0.72);font-weight:300;line-height:1.75;}
+
+    /* Alts */
+    .alt-label{font-size:11px;font-weight:500;letter-spacing:0.09em;text-transform:uppercase;color:rgba(245,245,247,0.38);margin-bottom:10px;opacity:0;animation:fadeUp 0.5s ease 0.12s forwards;}
     .alt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;opacity:0;animation:fadeUp 0.5s ease 0.15s forwards;}
-    .alt-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;display:flex;flex-direction:column;gap:7px;text-decoration:none;transition:border-color 0.2s,transform 0.2s;}
+    .alt-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 16px;display:flex;flex-direction:column;gap:6px;text-decoration:none;transition:border-color 0.2s,transform 0.2s;}
     .alt-card:hover{border-color:var(--border-hover);transform:translateY(-2px);}
-    .alt-badge{font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);}
-    .alt-name{font-size:13px;font-weight:500;line-height:1.4;color:#fff;}
-    .alt-reason{font-size:12px;color:rgba(245,245,247,0.55);font-weight:300;flex:1;}
+    .alt-num{font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);}
+    .alt-name{font-size:12px;font-weight:500;line-height:1.4;color:#fff;}
+    .alt-reason{font-size:11px;color:rgba(245,245,247,0.52);font-weight:300;flex:1;}
     .alt-price{font-size:12px;font-weight:600;color:var(--amber);}
-    .alt-cta{margin-top:4px;background:rgba(125,211,252,0.09);border:1px solid rgba(125,211,252,0.22);border-radius:7px;padding:6px 8px;font-size:11px;font-weight:600;color:var(--blue);text-align:center;transition:background 0.2s;}
-    .alt-card:hover .alt-cta{background:rgba(125,211,252,0.16);}
-    .alt-pr{font-size:9px;color:rgba(245,245,247,0.2);text-align:right;}
+    .alt-btn{margin-top:4px;background:rgba(125,211,252,0.08);border:1px solid rgba(125,211,252,0.2);border-radius:7px;padding:6px 8px;font-size:11px;font-weight:600;color:var(--blue);text-align:center;transition:background 0.2s;}
+    .alt-card:hover .alt-btn{background:rgba(125,211,252,0.15);}
+    .alt-pr{font-size:9px;color:rgba(245,245,247,0.18);text-align:right;}
 
-    .retry-btn{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);color:rgba(245,245,247,0.45);font-family:inherit;font-size:13px;padding:10px 20px;cursor:pointer;transition:border-color 0.2s,color 0.2s;width:100%;margin-top:4px;}
+    .retry-btn{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);color:rgba(245,245,247,0.42);font-family:inherit;font-size:13px;padding:10px;cursor:pointer;transition:border-color 0.2s,color 0.2s;width:100%;}
     .retry-btn:hover{border-color:var(--border-hover);color:var(--text);}
 
     @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
     @keyframes spin{to{transform:rotate(360deg);}}
   </style>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-RD4WRP94DM"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-RD4WRP94DM');
-</script>
 </head>
 <body>
 <div class="wrap">
 
   <header class="header">
     <p class="logo">SkinCheck AI</p>
-    <h1 class="headline">そのスキンケア、<br>本当にあなたに合ってる？</h1>
-    <p class="subline">あなたの肌に合わせて、AIが購入を判断します</p>
+    <h1 class="headline">あなたのスキンケア、<br>本当に相性が合ってる？</h1>
+    <p class="subline">皮膚科学的な観点でAIが相性を診断します</p>
   </header>
 
-  <!-- ① 肌プロフィール -->
-  <div class="profile-section">
-    <p class="sec-label">あなたの肌について</p>
-    <div class="profile-card">
-      <div class="profile-header">
-        <p class="profile-title">肌プロフィール</p>
-        <span class="profile-badge">パーソナル判定に使用</span>
+  <!-- Step 1: 肌タイプ -->
+  <div class="sec a1">
+    <div class="sec-header">
+      <div class="sec-num">1</div>
+      <p class="sec-title">肌タイプ・体質</p>
+      <span class="sec-badge required">必須</span>
+    </div>
+    <div class="card">
+      <div class="field">
+        <p class="field-label">肌タイプ（複数選択可）</p>
+        <div class="chips" id="skinTypeChips">
+          <span class="chip" onclick="toggleChip(this,'skinTypes')">乾燥肌</span>
+          <span class="chip" onclick="toggleChip(this,'skinTypes')">混合肌</span>
+          <span class="chip" onclick="toggleChip(this,'skinTypes')">脂性肌</span>
+          <span class="chip" onclick="toggleChip(this,'skinTypes')">敏感肌</span>
+          <span class="chip" onclick="toggleChip(this,'skinTypes')">普通肌</span>
+          <span class="chip" onclick="toggleChip(this,'skinTypes')">インナードライ</span>
+        </div>
       </div>
-      <div class="field-group">
-
-        <div>
-          <p class="field-label">肌タイプ（1つ選択）</p>
-          <div class="chips" id="skinTypeChips">
-            <span class="chip" data-val="乾燥肌" onclick="selectChip(this,'skinType')">乾燥肌</span>
-            <span class="chip" data-val="混合肌" onclick="selectChip(this,'skinType')">混合肌</span>
-            <span class="chip" data-val="脂性肌" onclick="selectChip(this,'skinType')">脂性肌</span>
-            <span class="chip" data-val="敏感肌" onclick="selectChip(this,'skinType')">敏感肌</span>
-            <span class="chip" data-val="普通肌" onclick="selectChip(this,'skinType')">普通肌</span>
-          </div>
+      <div class="field">
+        <p class="field-label">体質・アレルギー（複数選択可）</p>
+        <div class="chips" id="constitutionChips">
+          <span class="chip amber" onclick="toggleChip(this,'constitutions')">アトピー気質</span>
+          <span class="chip amber" onclick="toggleChip(this,'constitutions')">アレルギー体質</span>
+          <span class="chip amber" onclick="toggleChip(this,'constitutions')">ニキビ体質</span>
+          <span class="chip amber" onclick="toggleChip(this,'constitutions')">金属アレルギー</span>
+          <span class="chip amber" onclick="toggleChip(this,'constitutions')">花粉症</span>
+          <span class="chip amber" onclick="toggleChip(this,'constitutions')">日焼けしやすい</span>
         </div>
-
-        <div>
-          <p class="field-label">気になること（複数可）</p>
-          <div class="chips" id="concernChips">
-            <span class="chip" data-val="乾燥" onclick="toggleChip(this,'concerns')">乾燥</span>
-            <span class="chip" data-val="赤み" onclick="toggleChip(this,'concerns')">赤み</span>
-            <span class="chip" data-val="ニキビ" onclick="toggleChip(this,'concerns')">ニキビ</span>
-            <span class="chip" data-val="毛穴" onclick="toggleChip(this,'concerns')">毛穴</span>
-            <span class="chip" data-val="くすみ" onclick="toggleChip(this,'concerns')">くすみ</span>
-            <span class="chip" data-val="ベタつき" onclick="toggleChip(this,'concerns')">ベタつき</span>
-            <span class="chip" data-val="刺激・ヒリつき" onclick="toggleChip(this,'concerns')">刺激・ヒリつき</span>
-          </div>
+      </div>
+      <div class="field">
+        <p class="field-label">気になること（複数選択可）</p>
+        <div class="chips" id="concernChips">
+          <span class="chip" onclick="toggleChip(this,'concerns')">乾燥・かさつき</span>
+          <span class="chip" onclick="toggleChip(this,'concerns')">赤み</span>
+          <span class="chip" onclick="toggleChip(this,'concerns')">ヒリつき</span>
+          <span class="chip" onclick="toggleChip(this,'concerns')">ニキビ</span>
+          <span class="chip" onclick="toggleChip(this,'concerns')">毛穴</span>
+          <span class="chip" onclick="toggleChip(this,'concerns')">テカリ</span>
+          <span class="chip" onclick="toggleChip(this,'concerns')">くすみ</span>
+          <span class="chip" onclick="toggleChip(this,'concerns')">色素沈着</span>
+          <span class="chip" onclick="toggleChip(this,'concerns')">シワ・たるみ</span>
         </div>
-
-        <div>
-          <p class="field-label">今使っている商品（任意）</p>
-          <input class="field-input" id="currentProduct" type="text" placeholder="例：無印良品 敏感肌用化粧水" />
-        </div>
-
       </div>
     </div>
   </div>
 
-  <!-- ② 商品レビュー -->
-  <div class="review-section">
-    <p class="sec-label">商品レビュー</p>
-    <div class="review-card">
-      <div class="review-header">
-        <p class="review-title">レビューを貼り付ける</p>
-        <span class="optional-badge">任意</span>
-      </div>
-      <p class="review-hint">Amazonや楽天の商品ページからレビューをコピーして貼り付けてください。<br><span>貼り付けなくても、肌プロフィールだけで解析できます。</span></p>
-      <textarea class="review-textarea" id="reviewInput"
-        placeholder="例：「敏感肌ですが刺激もなく使えました。保湿力が高く朝まで潤いが続きます。ただ少しベタつきが気になる...」"
-        oninput="updateCount()"></textarea>
-      <div class="review-footer">
-        <span class="char-count" id="charCount">0 文字</span>
+  <!-- Step 2: 現在のアイテム -->
+  <div class="sec a2">
+    <div class="sec-header">
+      <div class="sec-num">2</div>
+      <p class="sec-title">今使っているアイテム</p>
+      <span class="sec-badge">任意・1つからOK</span>
+    </div>
+    <div class="card2">
+      <div class="products-grid">
+        <div class="product-item">
+          <p class="product-label"><span class="product-icon">💧</span>化粧水</p>
+          <input class="field-input" id="p_toner" type="text" placeholder="例：無印良品 敏感肌用" />
+        </div>
+        <div class="product-item">
+          <p class="product-label"><span class="product-icon">🌿</span>乳液</p>
+          <input class="field-input" id="p_lotion" type="text" placeholder="例：ちふれ 乳液" />
+        </div>
+        <div class="product-item">
+          <p class="product-label"><span class="product-icon">✨</span>導入化粧水</p>
+          <input class="field-input" id="p_booster" type="text" placeholder="例：ナールス ブースター" />
+        </div>
+        <div class="product-item">
+          <p class="product-label"><span class="product-icon">💎</span>美容液</p>
+          <input class="field-input" id="p_serum" type="text" placeholder="例：肌ラボ 極潤" />
+        </div>
+        <div class="product-item">
+          <p class="product-label"><span class="product-icon">🧴</span>クレンジング</p>
+          <input class="field-input" id="p_cleanse" type="text" placeholder="例：キュレル 泡洗顔" />
+        </div>
+        <div class="product-item">
+          <p class="product-label"><span class="product-icon">☀️</span>日焼け止め</p>
+          <input class="field-input" id="p_sunscreen" type="text" placeholder="例：アネッサ" />
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ③ 解析ボタン -->
-  <div class="btn-wrap">
-    <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">AIで解析する</button>
-    <p class="btn-sub">肌プロフィールのみでも解析できます</p>
+  <!-- Step 3: 使用感 -->
+  <div class="sec a3">
+    <div class="sec-header">
+      <div class="sec-num">3</div>
+      <p class="sec-title">今の肌の状態・使用感</p>
+      <span class="sec-badge">任意</span>
+    </div>
+    <div class="card2">
+      <textarea class="field-textarea" id="skinCondition"
+        placeholder="今の肌の状態や使用感を自由に書いてください。&#10;&#10;例：「化粧水をつけた後にヒリヒリする」「夕方になると乾燥する」「最近ニキビが増えた」「乳液がベタついて気になる」など"></textarea>
+    </div>
+  </div>
+
+  <!-- Step 4: 診断したいアイテム -->
+  <div class="sec a4">
+    <div class="sec-header">
+      <div class="sec-num">4</div>
+      <p class="sec-title">新しく試したいアイテム</p>
+      <span class="sec-badge">任意</span>
+    </div>
+    <div class="card2">
+      <input class="field-input" id="newProduct" type="text" placeholder="例：BULK HOMME ザ・トナー、肌ラボ 極潤化粧水 など" />
+      <p style="font-size:11px;color:rgba(245,245,247,0.3);margin-top:8px;font-weight:300;">今のアイテムとの相性も一緒に診断します</p>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-wrap">
+    <button class="btn-main" id="diagBtn" onclick="diagnose()">相性を診断する</button>
+    <p class="btn-sub-text">肌タイプを選ぶだけで診断できます</p>
   </div>
 
   <!-- Loading -->
   <div class="loading" id="loading">
     <div class="spinner"></div>
-    <p class="loading-text">あなたの肌に合わせて解析中...</p>
-    <p class="loading-sub">10〜20秒ほどかかります</p>
+    <p class="loading-text">皮膚科学的な観点で診断しています...</p>
+    <p class="loading-sub">15〜20秒ほどかかります</p>
   </div>
 
   <!-- Error -->
@@ -231,158 +289,168 @@
 
   <!-- Result -->
   <div class="result" id="result">
+
     <div class="verdict-card">
       <div class="verdict-top">
-        <div class="verdict-label">
+        <div class="verdict-left">
           <div class="verdict-dot" id="verdictDot"></div>
-          <div><p class="verdict-text" id="verdictText"></p><p class="score-sublabel">おすすめ度</p></div>
+          <div>
+            <p class="verdict-text" id="verdictText"></p>
+            <p class="score-sub">総合スコア</p>
+          </div>
         </div>
         <div class="score-ring">
-          <svg width="58" height="58" viewBox="0 0 58 58">
-            <circle cx="29" cy="29" r="23" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="3"/>
-            <circle cx="29" cy="29" r="23" fill="none" stroke-width="3" stroke-linecap="round"
-              id="scoreArc" stroke-dasharray="0 144.5" style="transition:stroke-dasharray 1s ease"/>
+          <svg width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="3"/>
+            <circle cx="28" cy="28" r="22" fill="none" stroke-width="3" stroke-linecap="round"
+              id="scoreArc" stroke-dasharray="0 138.2" style="transition:stroke-dasharray 1s ease"/>
           </svg>
           <div class="score-num" id="scoreNum">0%</div>
         </div>
       </div>
       <p class="summary-text" id="summaryText"></p>
-      <p class="section-label">理由</p>
+      <p class="r-label">診断理由</p>
       <div class="reason-list" id="reasonList"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div><p class="section-label">向いている人</p><div class="tag-list" id="goodList"></div></div>
-        <div><p class="section-label">向いていない人</p><div class="tag-list" id="badList"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <p class="r-label">あなたの肌に合う点</p>
+          <div class="tag-list" id="goodList"></div>
+        </div>
+        <div>
+          <p class="r-label">注意が必要な点</p>
+          <div class="tag-list" id="badList"></div>
+        </div>
       </div>
     </div>
 
-    <!-- パーソナルインサイト -->
-    <div class="insight-card" id="insightCard" style="display:none">
-      <p class="insight-label">あなたの肌への判定</p>
+    <div class="compat-card" id="compatCard" style="display:none">
+      <p class="compat-title">アイテム相性チェック</p>
+      <div class="compat-list" id="compatList"></div>
+    </div>
+
+    <div class="insight-card">
+      <p class="insight-badge">あなたへのアドバイス</p>
       <p class="insight-text" id="insightText"></p>
     </div>
 
     <div>
-      <p class="alt-section-label">代替商品</p>
+      <p class="alt-label">おすすめ代替アイテム</p>
       <div class="alt-grid" id="altGrid"></div>
     </div>
 
-    <button class="retry-btn" onclick="resetForm()">← もう一度解析する</button>
+    <button class="retry-btn" onclick="resetForm()">← もう一度診断する</button>
   </div>
 
 </div>
+
 <script>
   const AFFILIATE_TAG = 'skincheckai-22';
-  const COLORS = {'買い':'#22C55E','注意':'#F59E0B','見送り':'#EF4444'};
-  let skinType = '';
-  let concerns = [];
+  const COLORS = {'おすすめ':'#22C55E','要注意':'#F59E0B','見直し推奨':'#EF4444'};
 
-  function selectChip(el, key) {
-    document.querySelectorAll(`#skinTypeChips .chip`).forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    skinType = el.dataset.val;
-  }
+  let skinTypes = [], constitutions = [], concerns = [];
 
   function toggleChip(el, key) {
-    el.classList.toggle('selected');
-    const val = el.dataset.val;
-    if (el.classList.contains('selected')) {
-      concerns.push(val);
-    } else {
-      concerns = concerns.filter(v => v !== val);
-    }
-  }
-
-  function updateCount() {
-    document.getElementById('charCount').textContent = document.getElementById('reviewInput').value.length + ' 文字';
+    el.classList.toggle('on');
+    const val = el.textContent.trim();
+    const map = { skinTypes, constitutions, concerns };
+    const arr = map[key];
+    if (el.classList.contains('on')) arr.push(val);
+    else { const i = arr.indexOf(val); if (i > -1) arr.splice(i, 1); }
   }
 
   function setScore(score, color) {
-    const circ = 2*Math.PI*23;
+    const circ = 2 * Math.PI * 22;
     const arc = document.getElementById('scoreArc');
     arc.setAttribute('stroke', color);
     setTimeout(() => arc.setAttribute('stroke-dasharray', `${(score/100)*circ} ${circ}`), 100);
-    let cur=0; const el=document.getElementById('scoreNum'), step=score/40;
-    const t=setInterval(()=>{cur=Math.min(cur+step,score);el.textContent=Math.round(cur)+'%';if(cur>=score)clearInterval(t);},25);
+    let cur = 0; const el = document.getElementById('scoreNum'), step = score / 40;
+    const t = setInterval(() => { cur = Math.min(cur+step,score); el.textContent=Math.round(cur)+'%'; if(cur>=score)clearInterval(t); }, 25);
   }
 
   function renderResult(data) {
-    const color = COLORS[data.status]||COLORS['注意'];
+    const color = COLORS[data.status] || COLORS['要注意'];
     document.getElementById('verdictDot').style.background = color;
     document.getElementById('verdictText').textContent = data.status;
     document.getElementById('summaryText').textContent = data.summary;
     document.getElementById('reasonList').innerHTML = (data.reasons||[]).map(r =>
-      `<div class="reason-item"><span class="reason-dot"></span><span>${r}</span></div>`).join('');
-    document.getElementById('goodList').innerHTML = (data.goodFor||[]).map(t=>`<span class="tag good">${t}</span>`).join('');
-    document.getElementById('badList').innerHTML = (data.badFor||[]).map(t=>`<span class="tag bad">${t}</span>`).join('');
+      `<div class="reason-item"><span class="r-dot"></span><span>${r}</span></div>`).join('');
+    document.getElementById('goodList').innerHTML = (data.goodFor||[]).map(t=>`<span class="tag g">${t}</span>`).join('');
+    document.getElementById('badList').innerHTML = (data.badFor||[]).map(t=>`<span class="tag b">${t}</span>`).join('');
 
-    // パーソナルインサイト
-    if (data.personalInsight) {
-      document.getElementById('insightText').textContent = data.personalInsight;
-      document.getElementById('insightCard').style.display = 'block';
+    // アイテム相性
+    if (data.compatibility && data.compatibility.length > 0) {
+      document.getElementById('compatCard').style.display = 'block';
+      document.getElementById('compatList').innerHTML = data.compatibility.map(c => {
+        const icon = c.status === 'good' ? '✅' : c.status === 'caution' ? '⚠️' : '❌';
+        return `<div class="compat-item"><span class="compat-icon">${icon}</span><div class="compat-content"><p class="compat-name">${c.name}</p><p class="compat-desc">${c.comment}</p></div></div>`;
+      }).join('');
     }
 
-    document.getElementById('altGrid').innerHTML = (data.alternatives||[]).map((a,i)=>`
+    document.getElementById('insightText').textContent = data.personalAdvice || '';
+    document.getElementById('altGrid').innerHTML = (data.alternatives||[]).map((a,i) => `
       <a class="alt-card" href="https://www.amazon.co.jp/s?k=${encodeURIComponent(a.name)}&tag=${AFFILIATE_TAG}" target="_blank" rel="noopener noreferrer sponsored">
-        <p class="alt-badge">代替 0${i+1}</p>
+        <p class="alt-num">推奨 0${i+1}</p>
         <p class="alt-name">${a.name}</p>
         <p class="alt-reason">${a.reason}</p>
         <p class="alt-price">${a.price||''}</p>
-        <div class="alt-cta">Amazonで見る →</div>
+        <div class="alt-btn">Amazonで見る →</div>
         <p class="alt-pr">PR</p>
       </a>`).join('');
 
     document.getElementById('loading').classList.remove('show');
     document.getElementById('result').classList.add('show');
-    setTimeout(()=>setScore(data.score,color),300);
+    setTimeout(() => setScore(data.score, color), 300);
   }
 
   function showError(msg) {
     document.getElementById('loading').classList.remove('show');
     document.getElementById('errorText').textContent = msg;
     document.getElementById('errorBox').classList.add('show');
-    const btn = document.getElementById('analyzeBtn');
-    btn.disabled=false; btn.style.opacity='1';
+    const btn = document.getElementById('diagBtn');
+    btn.disabled = false; btn.style.opacity = '1';
   }
 
   function resetForm() {
     document.getElementById('result').classList.remove('show');
     document.getElementById('errorBox').classList.remove('show');
-    document.getElementById('insightCard').style.display='none';
-    document.getElementById('reviewInput').value='';
-    document.getElementById('charCount').textContent='0 文字';
-    window.scrollTo({top:0,behavior:'smooth'});
+    document.getElementById('compatCard').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  async function analyze() {
-    // 肌タイプかレビューのどちらかは必須
-    const reviewText = document.getElementById('reviewInput').value.trim();
-    if (!skinType && reviewText.length < 30) {
-      showError('肌タイプを選択するか、レビューを貼り付けてください。');
+  async function diagnose() {
+    if (skinTypes.length === 0) {
+      showError('肌タイプを1つ以上選択してください。');
       return;
     }
-
-    const btn = document.getElementById('analyzeBtn');
-    btn.disabled=true; btn.style.opacity='0.5';
+    const btn = document.getElementById('diagBtn');
+    btn.disabled = true; btn.style.opacity = '0.5';
     document.getElementById('result').classList.remove('show');
     document.getElementById('errorBox').classList.remove('show');
     document.getElementById('loading').classList.add('show');
 
     const payload = {
-      skinType,
-      concerns,
-      currentProduct: document.getElementById('currentProduct').value.trim(),
-      reviewText,
+      skinTypes, constitutions, concerns,
+      products: {
+        toner: document.getElementById('p_toner').value.trim(),
+        lotion: document.getElementById('p_lotion').value.trim(),
+        booster: document.getElementById('p_booster').value.trim(),
+        serum: document.getElementById('p_serum').value.trim(),
+        cleanse: document.getElementById('p_cleanse').value.trim(),
+        sunscreen: document.getElementById('p_sunscreen').value.trim(),
+      },
+      skinCondition: document.getElementById('skinCondition').value.trim(),
+      newProduct: document.getElementById('newProduct').value.trim(),
     };
 
     try {
       const res = await fetch('/api/analyze', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) { showError(data.error||'解析に失敗しました。もう一度お試しください。'); return; }
-      btn.disabled=false; btn.style.opacity='1';
+      if (!res.ok) { showError(data.error || '診断に失敗しました。もう一度お試しください。'); return; }
+      btn.disabled = false; btn.style.opacity = '1';
       renderResult(data);
     } catch(e) {
       showError('通信エラーが発生しました。インターネット接続を確認してください。');
