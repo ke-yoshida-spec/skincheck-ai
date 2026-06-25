@@ -14,13 +14,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-  // プロフィール構築
   const profileLines = [];
   profileLines.push(`肌タイプ：${skinTypes.join('、')}`);
   if (constitutions && constitutions.length > 0) profileLines.push(`体質・アレルギー：${constitutions.join('、')}`);
   if (concerns && concerns.length > 0) profileLines.push(`気になること：${concerns.join('、')}`);
 
-  // 現在のアイテム
   const productLines = [];
   if (products) {
     if (products.toner) productLines.push(`化粧水：${products.toner}`);
@@ -30,6 +28,8 @@ export default async function handler(req, res) {
     if (products.cleanse) productLines.push(`クレンジング：${products.cleanse}`);
     if (products.sunscreen) productLines.push(`日焼け止め：${products.sunscreen}`);
   }
+
+  const randomSeed = Math.floor(Math.random() * 1000);
 
   const prompt = `あなたは皮膚科学の専門知識を持つスキンケアAIアドバイザーです。
 敏感肌の30代男性向けに、以下の情報をもとにスキンケアの相性診断を行ってください。
@@ -61,19 +61,43 @@ ${newProduct ? `【新しく試したいアイテム】\n${newProduct}` : ''}
   ],
   "personalAdvice": "ユーザーの肌プロフィールと使用アイテムを踏まえた、具体的で実践的なアドバイス（100文字以内）",
   "alternatives": [
-    { "name": "代替・追加推奨アイテム名1", "reason": "この人の肌に合う皮膚科学的な理由", "price": "価格帯" },
-    { "name": "代替・追加推奨アイテム名2", "reason": "この人の肌に合う皮膚科学的な理由", "price": "価格帯" }
+    { "name": "推奨アイテム名1", "reason": "この人の肌に合う皮膚科学的な理由", "price": "価格帯" },
+    { "name": "推奨アイテム名2", "reason": "この人の肌に合う皮膚科学的な理由", "price": "価格帯" },
+    { "name": "推奨アイテム名3", "reason": "この人の肌に合う皮膚科学的な理由", "price": "価格帯" },
+    { "name": "推奨アイテム名4", "reason": "この人の肌に合う皮膚科学的な理由", "price": "価格帯" }
   ]
 }
 
-診断基準：
+【代替商品の選定ルール（最重要）】
+以下のルールを必ず守って4つの代替商品を選定してください。
+
+1. 価格帯を必ず分散させること
+   - 1つ目：500円〜1,000円のプチプラ商品
+   - 2つ目：1,000円〜2,000円の手頃な商品
+   - 3つ目：2,000円〜4,000円のミドル価格帯商品
+   - 4つ目：4,000円以上のプレミアム商品
+
+2. ブランドを毎回必ず変えること（4つすべて異なるブランド）
+   - 選択可能ブランド例：無印良品・ちふれ・ニベア・肌ラボ・キュレル・セタフィル・ロゼット・コーセー・なめらか本舗・雪肌精・メンズビオレ・ハトムギ化粧水・ナールス・オルビス・ファンケル・アクアレーベル・BULK HOMME・ルシード・ビオレ・ミノン・Dプログラム・資生堂・花王・ポーラなど
+   - 現在使用中のアイテムと同じブランドは避ける
+
+3. カテゴリを肌の悩みに合わせて選ぶこと
+   - 乾燥が気になる場合：ヒアルロン酸・セラミド配合を優先
+   - 赤み・敏感肌の場合：無添加・低刺激処方を優先
+   - ニキビが気になる場合：ノンコメドジェニック処方を優先
+   - テカリが気になる場合：さっぱりテクスチャーを優先
+
+4. 今回のシード値：${randomSeed}（このシード値に基づいて毎回異なる商品を選ぶこと）
+
+5. 日本のドラッグストア・バラエティショップ・ECサイトで実際に購入可能な商品のみ
+
+【その他の診断基準】
 - score 70以上 → status: "おすすめ"
 - score 40〜69 → status: "要注意"
 - score 39以下 → status: "見直し推奨"
 - 皮膚科学的な成分の相性・刺激リスク・保湿バランスを重視すること
 - アトピーやアレルギー体質の場合は特に成分の安全性を厳しく評価すること
 - 複数アイテムを使用している場合は成分の重複・競合も考慮すること
-- 代替商品は日本で購入可能な実在する商品を提案すること
 - compatibilityは入力されたアイテムのみ含める（入力がない場合は空配列）`;
 
   try {
@@ -86,11 +110,11 @@ ${newProduct ? `【新しく試したいアイテム】\n${newProduct}` : ''}
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         messages: [
-          { role: 'system', content: 'あなたは皮膚科学の専門知識を持つスキンケアAIアドバイザーです。必ずJSON形式のみで返答してください。' },
+          { role: 'system', content: 'あなたは皮膚科学の専門知識を持つスキンケアAIアドバイザーです。必ずJSON形式のみで返答してください。代替商品は必ず4つ、すべて異なるブランド・異なる価格帯から選んでください。' },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.3,
-        max_tokens: 1500,
+        temperature: 0.8,
+        max_tokens: 2000,
       }),
     });
 
